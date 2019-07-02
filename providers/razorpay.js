@@ -26,3 +26,25 @@ exports.success = (payment, config) => {
     })
 }
 
+exports.refund = (model, config) => {
+    let log = logger.start('refund payment start ...')
+
+    let rzp = new Razorpay({
+        key_id: config.key,
+        key_secret: config.secret
+    })
+
+    let razorpayPaymentId = model.payment.code
+    // let razorpayPaymentId = "pay_AiuQWJaQkGq4tQ"
+
+    return new Promise((resolve, reject) => {
+        return rzp.payments.refund(razorpayPaymentId, (error, data) => {
+            if (error) {
+                return reject(error)
+            }
+            log.end()
+            return resolve(data)
+        })
+    })
+}
+

@@ -38,8 +38,9 @@ exports.toModel = (entity) => {
                 id: entity.tenant.toString()
             }
     }
-}
 
+    return model
+}
 
 exports.toSearchModel = (entities) => {
     return entities.map((entity) => {

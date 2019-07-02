@@ -18,3 +18,11 @@ exports.update = async (req) => {
     log.end()
     return mapper.toModel(payment)
 }
+
+exports.get = async (req) => {
+    let log = req.context.logger.start('api/payments:get')
+
+    let payment = await paymentService.getById(req.params.id, req.context)
+    log.end()
+    return mapper.toModel(payment)
+}

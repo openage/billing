@@ -43,6 +43,10 @@ const create = async (model, context) => {
 
     model.organization = organization
 
+    if (!model.tenant) {
+        model.tenant = context.tenant
+    }
+
     await getTypeForOrganization(model, context)
 
     let entityType = new db.entityType(model).save()
@@ -92,14 +96,26 @@ const get = async (query, context) => {
     }
 
     if (query.code) {
-        return db.entityType.findOne({
-            code: query.code,
-        })
+        let where = context.where().add('code', query.code)
+        return db.entityType.findOne(where.clause)
     }
 
     return null
 }
 
+const getOrCreate = async (query, context) => {
+    let log = context.logger.start('services/settings:getOrCreate')
+
+    let entity = await get(query, context)
+
+    if (!entity) {
+        entity = await create(query, context)
+    }
+
+    return entity
+}
+
 exports.getById = getById
 exports.create = create
 exports.get = get
+exports.getOrCreate = getOrCreate

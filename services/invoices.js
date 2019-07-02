@@ -3,7 +3,7 @@
 const entityService = require('./entities')
 const userService = require('./users')
 const organizationService = require('./organizations')
-
+const offline = require('@open-age/offline-processor')
 
 const create = async (data, context) => {
     let log = context.logger.start('services/invoices:create')
@@ -49,27 +49,31 @@ const create = async (data, context) => {
             throw new Error(`no such entity found ${item.entity}`)
         }
 
-        if (entity.rate && entity.rate.length) {
-            rates = entity.rate
-        } else {
-            rates = entity.type.rate
-        }
-
-        for (let rate of rates) {
-            let part = {
-                code: rate.code,
-                description: rate.description,
-                amount: rate.value
-            }
-            netItemAmount = netItemAmount + part.amount
-            parts.push(part)
-        }
-
-        if (entity.consumption) {
+        if (item.consumption) {
+            consumption = item.consumption
+        } else if (entity.consumption) {
             consumption = {
                 quantity: entity.consumption.quantity,
                 from: entity.consumption.from,
                 till: entity.consumption.till,
+            }
+        }
+
+        if (item.parts && item.parts.length) {
+            parts = item.parts
+            for (let part of parts) {
+                netItemAmount = netItemAmount + part.amount * (consumption.quantity || 1)
+            }
+        } else if (entity.rate && entity.rate.length) {
+            rates = entity.rate || entity.type.rate
+            for (let rate of rates) {
+                let part = {
+                    code: rate.code,
+                    description: rate.description,
+                    amount: rate.value
+                }
+                netItemAmount = netItemAmount + part.amount * (consumption.quantity || 1)
+                parts.push(part)
             }
         }
 
@@ -78,7 +82,9 @@ const create = async (data, context) => {
             amount: netItemAmount,
             entity: entity.id,
             parts: parts,
-            consumption: consumption
+            consumption: consumption,
+            description: item.description,
+            details: item.details
         })
     }
 
@@ -132,6 +138,16 @@ const update = async (data, id, context) => {
                 entity: entity.id
             })
         }
+    }
+
+    function isRefundable(data, invoice) {
+        return !!(data.status === 'cancelled' && invoice.status === 'paid')
+    }
+
+    if (isRefundable(data, invoice)) {
+        let payment = await db.payment.findOne({ invoice: invoice.id })
+        context.processSync = true
+        offline.queue('payment', 'refund', { id: payment.id }, context)
     }
 
     await invoice.save()

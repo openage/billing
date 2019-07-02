@@ -5,7 +5,7 @@ const entityTypeService = require('./settings')
 const create = async (model, context) => {
     let log = context.logger.start('services/entities/create')
 
-    let type = await entityTypeService.get(model.type, context)
+    let type = await entityTypeService.getOrCreate(model.type, context)
 
     if (!type) {
         throw new Error('entity-type not found')

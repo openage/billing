@@ -29,12 +29,6 @@ const onPaymentSuccess = async (payment, context) => {
         return obj
     }
 
-    // if (paymentDetails.mode === 'cash') {
-    //     let invoiceModel = invoicePaymentCalculator(invoice, payment)
-    //     await invoiceService.update(invoiceModel, invoice.id, context)
-    //     return payment
-    // }
-
     let gatewayProvider = require(`../providers/${gateway.provider.code}`)
 
     let data = await gatewayProvider.success(payment, gateway.config)
@@ -62,7 +56,7 @@ const create = async (model, context) => {
     let gateway
     let invoice = await invoiceService.getById(model.invoice.id, context)
 
-    let organization = await organizationService.get(model.organization, context)
+    let organization = await organizationService.get(model.organization, context) || context.organization
 
     if (model.gateway) {
         gateway = await gatewayService.getById(model.gateway.id, context)
@@ -85,11 +79,15 @@ const create = async (model, context) => {
         tenant: context.tenant
     }).save()
 
+    if (payment.mode === 'cash') {
+        await onPaymentSuccess(payment, context)
+    }
+
     // context.processSync = true
     // offline.queue('payment', 'started', { id: payment.id }, context)
 
     log.end()
-    return payment
+    return getById(payment.id, context)
 }
 
 const update = async (model, id, context) => {
@@ -125,10 +123,15 @@ const update = async (model, id, context) => {
 const getById = async (id, context) => {
     context.logger.start('services/payments:getById')
 
-    return db.payment.findById(id).populate('user invoice organization').populate({
+    return db.payment.findById(id).populate('user  organization').populate({
         path: 'gateway',
         populate: {
             path: 'provider'
+        }
+    }).populate({
+        path: 'invoice',
+        populate: {
+            path: 'buyer seller organization lineItems.entity'
         }
     })
 }

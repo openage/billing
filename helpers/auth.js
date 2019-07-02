@@ -62,6 +62,8 @@ exports.requiresEmployee = (req, res, next) => {
     let log = res.logger.start('requiresRoleKey')
     var role = fetch(req, 'role', 'key')
 
+    console.log(role.key)
+
     if (!role) {
         log.end()
         return res.accessDenied('x-role-key is required.', 403)

@@ -176,6 +176,8 @@ exports.getFromDirectory = async (roleKey, logger) => {
 
     const role = await directory.getRole(roleKey)
 
+    console.log(role)
+
     if (!role) {
         log.error(`could not find any role with key ${roleKey}`)
         return null

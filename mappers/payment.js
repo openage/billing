@@ -1,4 +1,6 @@
 'use strict'
+const invoiceMapper = require('./invoice')
+const gatewayMapper = require('./gateway')
 
 exports.toModel = (entity) => {
     let model = {
@@ -20,10 +22,8 @@ exports.toModel = (entity) => {
     }
 
     if (entity.gateway) {
-        if (entity.gateways_doc) {
-            model.gateway = {
-                id: entity.gateway.id
-            }
+        if (entity.gateway._doc) {
+            model.gateway = gatewayMapper.toModel(entity.gateway)
         } else {
             model.gateway = {
                 id: entity.gateway.toString()
@@ -52,8 +52,9 @@ exports.toModel = (entity) => {
             }
     }
 
-
-
+    if (entity.invoice) {
+        model.invoice = invoiceMapper.toModel(entity.invoice)
+    }
 
     return model
 }

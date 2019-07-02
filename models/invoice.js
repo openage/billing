@@ -46,7 +46,9 @@ module.exports = {
             from: Date,
             till: Date
         },
-        entity: { type: mongoose.Schema.Types.ObjectId, ref: 'entity' }
+        entity: { type: mongoose.Schema.Types.ObjectId, ref: 'entity' },
+        description: String,
+        details: String
     }],
     currency: {
         conversion: Number, // wrt $
@@ -66,7 +68,7 @@ module.exports = {
     status: {
         type: String,
         default: 'due',
-        enum: ['draft', 'due', 'over-due', 'paid', 'write-off']
+        enum: ['draft', 'due', 'over-due', 'paid', 'write-off', 'cancelled']
     },
     service: {
         code: String

@@ -11,13 +11,14 @@ module.exports = {
         enum: ['cash', 'cheque', 'online', 'card', 'wallet']
     },
     details: { type: Object },
-    gateway: { type: mongoose.Schema.Types.ObjectId, ref: 'gateway' },
+    gateway: { type: mongoose.Schema.Types.ObjectId, ref: 'gateway', required: true },
     invoice: { type: mongoose.Schema.Types.ObjectId, ref: 'invoice', required: true },
+    payment: { type: mongoose.Schema.Types.ObjectId, ref: 'payment', required: true },
     file: { id: String, url: String, thumbnail: String },
     status: {
         type: String,
         default: 'started',
-        enum: ['started', 'success', 'failed', 'refunded']
+        enum: ['started', 'success', 'failed']
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
 

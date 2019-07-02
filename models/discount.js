@@ -9,7 +9,7 @@ module.exports = {
     type: {
         type: String, // '%', 'value'
         default: 'value',
-        enum: ['value', '%', 'units']
+        enum: ['value', '%', 'units', 'flex']
     },
     expiry: Date, // not valid after
     limit: Number, // no of usages

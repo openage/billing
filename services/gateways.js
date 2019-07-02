@@ -32,7 +32,7 @@ const create = async (data, context) => {
 const getById = (id, context) => {
     context.logger.start('services/gateways:getById')
 
-    return db.gateway.findById(id)
+    return db.gateway.findById(id).populate('provider')
 }
 
 const getByCode = (code, context) => {

@@ -92,13 +92,18 @@ module.exports.configure = (app, logger) => {
         method: 'create',
         filter: auth.requiresEmployee
     }, {
-        action: 'GET',
-        method: 'get',
+        action: 'PUT',
+        method: 'update',
         url: '/:id',
         filter: auth.requiresEmployee
     }, {
         action: 'GET',
         method: 'search',
+        filter: auth.requiresEmployee
+    }, {
+        action: 'GET',
+        method: 'get',
+        url: '/:id',
         filter: auth.requiresEmployee
     }])
 
