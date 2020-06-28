@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 
 module.exports = {
     code: { type: String, required: true }, // will be auto generated
+    entityId: { type: String, index: { unique: true } },
     order: {
         id: String,
         code: String
@@ -27,6 +28,8 @@ module.exports = {
     date: Date,
     dueDate: Date,
     lineItems: [{
+        id: String,
+        code: String,
         amount: Number, // total of products price after tax
         parts: [{ // maps to rate
             code: String, // fixed, per-minute etc
@@ -73,6 +76,18 @@ module.exports = {
     service: {
         code: String
     },
-    organization: { type: mongoose.Schema.Types.ObjectId, ref: 'organization', required: true },
+    hooks: [{
+        trigger: {
+            when: String,
+            entity: String,
+            action: String
+        },
+        actions: [{
+            handler: String,
+            type: { type: String },
+            config: Object
+        }]
+    }],
+    organization: { type: mongoose.Schema.Types.ObjectId, ref: 'organization' },
     tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'tenant', required: true }
 }

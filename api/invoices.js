@@ -1,5 +1,5 @@
 'use strict'
-const invoiceService = require('../services/invoices')
+const invoiceService = require('../services/invoice')
 const gatewayService = require('../services/gateways')
 const mapper = require('../mappers/invoice')
 const paging = require('../helpers/paging')
@@ -16,12 +16,12 @@ exports.get = async (req) => {
     let log = req.context.logger.start('api/invoices:get')
 
     let invoice = await invoiceService.getById(req.params.id, req.context)
-    if (invoice.status == 'due') {
+    if (invoice.status === 'due') {
         let gatewayList = await gatewayService.getOrgOrTenantGateways({
             tenant: invoice.tenant,
             organization: invoice.organization
         }, req.context)
-        invoice.gateways = gatewayList   //todo organization gateways
+        invoice.gateways = gatewayList // todo organization gateways
     }
     log.end()
     return mapper.toModel(invoice)
@@ -35,7 +35,7 @@ const checkPermission = (permissions, context) => {
         }) !== -1
     })
 
-    return list.length ? true : false
+    return !!list.length
 }
 
 exports.update = async (req) => {
@@ -67,11 +67,11 @@ exports.search = async (req) => {
     }
 
     if (!req.context.organization) {
-        query.buyer = req.context.user.id
+        query.seller = req.context.user.id
     } else {
         let hasPermission = checkPermission(['admin', 'receptionist'], req.context)
         if (!hasPermission) {
-            query.seller = req.context.user.id
+            query.buyer = req.context.user.id
         }
         query.organization = req.context.organization.id
     }
@@ -94,5 +94,4 @@ exports.search = async (req) => {
 
     log.end()
     return page
-
 }

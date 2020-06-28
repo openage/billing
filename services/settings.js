@@ -34,14 +34,11 @@ const getTypeForOrganization = async (model, context) => {
 const create = async (model, context) => {
     const log = context.logger.start('services/entity-types:create')
 
-    let organization
     if (model.organization) {
-        organization = await organizationService.get(model.organization, context)
-    } else {
-        organization = context.organization
+        model.organization = await organizationService.get(model.organization, context)
+    } else if (context.organization) {
+        model.organization = context.organization
     }
-
-    model.organization = organization
 
     if (!model.tenant) {
         model.tenant = context.tenant

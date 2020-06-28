@@ -1,8 +1,11 @@
 'use strict'
 const fs = require('fs')
+const join = require('path').join
 const mongoose = require('mongoose')
-var changeCase = require('change-case')
+const changeCase = require('change-case')
 const findOrCreate = require('findorcreate-promise')
+
+mongoose.Promise = global.Promise
 
 var init = function () {
     // set all the models on db
@@ -16,8 +19,8 @@ var init = function () {
                 type: Date,
                 default: Date.now
             }
+            let schema = mongoose.Schema(entity, { usePushEach: true })
 
-            let schema = mongoose.Schema(entity)
             schema.pre('save', function (next) {
                 this.timeStamp = Date.now()
                 next()

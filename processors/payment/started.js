@@ -11,8 +11,19 @@ exports.process = async (data, context) => {
 
     let payment = await paymentService.getById(data.id, context)
 
-    return sendIt.send({ id: payment.id }, 'notify-buyer-on-payment-started',
+    let config = payment.gateway.config
+
+    let provider = require('../../providers/' + payment.gateway.provider.code)
+
+    let link = await provider.initiate(payment, config, context)
+
+    return await sendIt.send({ id: payment.id, link: link }, 'notify-buyer-on-payment-started',
         [{ roleKey: payment.user.role.key }], payment.user.role.key, ['push']).then((response) => {
             log.info('push delivered')
+            return
+        }).catch(err => {
+            log.console.error(err);
+            return
         })
+
 }

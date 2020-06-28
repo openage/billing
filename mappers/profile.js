@@ -1,6 +1,6 @@
 'use strict'
 
-exports.toModel = (entity) => {
+exports.toModel = (entity, context) => {
     if (!entity) {
         return null
     }

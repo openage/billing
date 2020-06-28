@@ -2,7 +2,7 @@
 
 const invoiceMapper = require('./invoice')
 
-exports.toModel = entity => {
+exports.toModel = (entity, context) => {
     let model = {
         dueCount: entity.dueCount,
         dueAmount: entity.dueAmount,

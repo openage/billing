@@ -1,4 +1,5 @@
 'use strict'
+const db = require('../models')
 
 exports.create = async (data, context) => {
     context.logger.start('services/queue-logs:create')

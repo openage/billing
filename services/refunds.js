@@ -2,7 +2,8 @@
 
 const paymentService = require('./payments')
 const gatewayService = require('./gateways')
-const invoiceService = require('./invoices')
+const invoiceService = require('./invoice')
+const db = require('../models')
 
 const create = async (model, context) => {
     let log = context.logger.start('services/refunds:create')
@@ -33,6 +34,5 @@ const create = async (model, context) => {
     log.end()
     return refund
 }
-
 
 exports.create = create

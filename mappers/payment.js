@@ -2,7 +2,7 @@
 const invoiceMapper = require('./invoice')
 const gatewayMapper = require('./gateway')
 
-exports.toModel = (entity) => {
+exports.toModel = (entity, context) => {
     let model = {
         id: entity.id || entity._id.toString(),
         date: entity.date,
@@ -23,7 +23,7 @@ exports.toModel = (entity) => {
 
     if (entity.gateway) {
         if (entity.gateway._doc) {
-            model.gateway = gatewayMapper.toModel(entity.gateway)
+            model.gateway = gatewayMapper.toModel(entity.gateway, context)
         } else {
             model.gateway = {
                 id: entity.gateway.toString()
@@ -53,7 +53,7 @@ exports.toModel = (entity) => {
     }
 
     if (entity.invoice) {
-        model.invoice = invoiceMapper.toModel(entity.invoice)
+        model.invoice = invoiceMapper.toModel(entity.invoice, context)
     }
 
     return model

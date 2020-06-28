@@ -17,7 +17,7 @@ module.exports = {
     },
     qualifications: Object, // basis on which the rates would be applied
     role: {
-        id: { type: String, unique: true },
+        id: { type: String },
         code: String,
         key: String,
         permissions: []

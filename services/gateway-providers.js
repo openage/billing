@@ -12,7 +12,6 @@ const create = async (model, context) => {
     return gatewayProvider
 }
 
-
 const get = async (query, context) => {
     context.logger.start('services/gateway-providers:get')
 

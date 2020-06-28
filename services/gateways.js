@@ -2,7 +2,7 @@
 
 const gatewayProviderService = require('./gateway-providers')
 const db = require('../models')
-
+const organizationService = require('./organizations')
 
 const create = async (data, context) => {
     let log = context.logger.start('services/gateways:create')
@@ -48,7 +48,7 @@ const getOrgOrTenantGateways = async (query, context) => {
         gatewayList = await db.gateway.find({ organization: query.organization }).populate('provider')
     }
 
-    if (gatewayList.length) {
+    if (gatewayList && gatewayList.length) {
         return gatewayList
     }
 

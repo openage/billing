@@ -1,6 +1,6 @@
 'use strict'
 
-exports.toModel = (entity) => {
+exports.toModel = (entity, context) => {
     let model = {
         id: entity.id || entity._id.toString(),
         code: entity.code,

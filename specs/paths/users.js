@@ -1,5 +1,5 @@
 module.exports = [{
-    url: '/{id}',
-    get: { parameters: ['x-role-key'] },
-    put: { parameters: ['x-role-key'] }
+    url: '/:id',
+    get: { permissions: ['tenant.user'] },
+    put: { permissions: ['tenant.user'] }
 }]

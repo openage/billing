@@ -1,4 +1,5 @@
 'use strict'
+const db = require('../models')
 
 const updateScheme = require('../helpers/update')
 

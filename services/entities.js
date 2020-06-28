@@ -1,5 +1,5 @@
 'use strict'
-
+const db = require('../models')
 const entityTypeService = require('./settings')
 
 const create = async (model, context) => {
@@ -13,7 +13,7 @@ const create = async (model, context) => {
 
     model.type = type.id
 
-    if (!model.organization) {
+    if (!model.organization && context.organization) {
         model.organization = context.organization.id
     }
 
@@ -47,7 +47,7 @@ const get = async (query, context) => {
 }
 
 const getOrCreate = async (data, context) => {
-    let log = context.logger.start("services/entities:getOrCreate")
+    let log = context.logger.start('services/entities:getOrCreate')
 
     let entity = await get(data, context)
 

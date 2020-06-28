@@ -1,6 +1,6 @@
 'use strict'
 
-exports.toModel = (entity) => {
+exports.toModel = (entity, context) => {
     let model = {
         name: entity.name,
         categories: entity.categories,
@@ -16,7 +16,6 @@ exports.toModel = (entity) => {
         } : {
                 id: entity.tenant.toString()
             }
-
     }
 
     return model

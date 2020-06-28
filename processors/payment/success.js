@@ -11,8 +11,8 @@ exports.process = async (data, context) => {
 
     let payment = await paymentService.getById(data.id, context)
 
-    return sendIt.send({ id: payment.id, amount: payment.amount, organization: payment.organization.name }, 'notify-buyer-on-payment-success',
-        [{ roleKey: payment.user.role.key }], payment.user.role.key, ['push']).then((response) => {
-            log.info('push delivered')
-        })
+    // await sendIt.send({ id: payment.id, amount: payment.amount, organization: payment.organization.name }, 'notify-buyer-on-payment-success',
+    //     [{ roleKey: payment.user.role.key }], payment.user.role.key, ['push']).then((response) => {
+    //     log.info('push delivered')
+    // })
 }

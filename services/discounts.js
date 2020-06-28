@@ -1,4 +1,5 @@
 'use strict'
+const db = require('../models')
 
 const create = async (data, context) => {
     let log = context.logger.start('services/discounts:create')
@@ -25,9 +26,6 @@ const getByCode = async (code, context) => {
         organization: context.organization
     })
 }
-
-
-
 
 exports.create = create
 exports.getByCode = getByCode

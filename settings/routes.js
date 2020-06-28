@@ -1,9 +1,7 @@
 'use strict'
-const auth = require('../helpers/auth')
+const contextBuilder = require('../helpers/context-builder')
 const apiRoutes = require('@open-age/express-api')
 const fs = require('fs')
-const loggerConfig = require('config').get('logger')
-const appRoot = require('app-root-path')
 
 const specs = require('../specs')
 
@@ -31,32 +29,17 @@ module.exports.configure = (app, logger) => {
         res.send(specs.get())
     })
 
-    app.get('/logs', function (req, res) {
-        var filePath = appRoot + '/' + loggerConfig.file.filename
+    var api = apiRoutes(app, { context: { builder: contextBuilder.create } })
 
-        fs.readFile(filePath, function (err, data) {
-            if (err) {
-                res.writeHead(404)
-                res.end()
-                return
-            }
-            res.contentType('application/json')
-            res.send(data)
-        })
-    })
-
-    var api = apiRoutes(app)
-
-    api.model('organizations').register('REST', auth.requiresAdmin)
-    api.model('taxes').register('REST', auth.requiresAdmin)
-    api.model('payments').register('REST', auth.requiresEmployee)
-    api.model('gateways').register('REST', auth.requiresEmployee)
-    api.model('users').register('REST', auth.requiresEmployee)
+    api.model('organizations').register('REST', { permissions: 'tenant.user' })
+    api.model('taxes').register('REST', { permissions: 'tenant.user' })
+    api.model('gateways').register('REST', { permissions: 'tenant.user' })
+    api.model('users').register('REST', { permissions: 'tenant.user' })
     api.model('summaries').register([{
         action: 'GET',
         method: 'get',
         url: '/:id',
-        filter: auth.requiresEmployee
+        permissions: 'tenant.user'
     }])
 
     // api.model({
@@ -65,46 +48,87 @@ module.exports.configure = (app, logger) => {
     // }).register([{
     //     action: 'POST',
     //     method: 'create',
-    //     filter: auth.requiresEmployee
+    //     permissions: 'tenant.user'
     // }])
     api.model('settings').register([{
         action: 'POST',
         method: 'create',
-        filter: auth.requiresEmployee
+        permissions: 'tenant.user'
     }, {
         action: 'GET',
         method: 'get',
         url: '/:id',
-        filter: auth.requiresEmployee
+        permissions: 'tenant.user'
     }])
     api.model('entities').register([{
         action: 'POST',
         method: 'create',
-        filter: auth.requiresEmployee
+        permissions: 'tenant.user'
     }, {
         action: 'GET',
         method: 'get',
         url: '/:id',
-        filter: auth.requiresEmployee
+        permissions: 'tenant.user'
     }])
     api.model('invoices').register([{
         action: 'POST',
         method: 'create',
-        filter: auth.requiresEmployee
+        permissions: 'tenant.user'
     }, {
         action: 'PUT',
         method: 'update',
         url: '/:id',
-        filter: auth.requiresEmployee
+        permissions: 'tenant.user'
     }, {
         action: 'GET',
         method: 'search',
-        filter: auth.requiresEmployee
+        permissions: 'tenant.user'
     }, {
         action: 'GET',
         method: 'get',
         url: '/:id',
-        filter: auth.requiresEmployee
+        permissions: 'tenant.user'
+    }])
+
+    api.model('payments').register([{
+        action: 'POST',
+        method: 'create',
+        permissions: 'tenant.user'
+    }, {
+        action: 'POST',
+        method: 'start',
+        url: '/:id/start',
+        permissions: 'tenant.user'
+    }, {
+        action: 'POST',
+        method: 'capture',
+        url: '/:id/capture',
+        permissions: 'tenant.user'
+    }, {
+        action: 'PUT',
+        method: 'update',
+        url: '/:id',
+        permissions: 'tenant.user'
+    }, {
+        action: 'GET',
+        method: 'search',
+        permissions: 'tenant.user'
+    }, {
+        action: 'GET',
+        method: 'get',
+        url: '/:id',
+        permissions: 'tenant.user'
+    }])
+
+    api.model('easyPay').register([{
+        action: 'POST',
+        method: 'update',
+        permissions: 'tenant.user'
+    }, {
+        action: 'GET',
+        method: 'create',
+        url: '/:id',
+        permissions: 'tenant.user'
     }])
 
     api.model('hooks')
@@ -112,7 +136,7 @@ module.exports.configure = (app, logger) => {
             action: 'POST',
             method: 'organizationUpdate',
             url: '/organization/update',
-            filter: auth.requiresEmployee
+            permissions: 'tenant.user'
         }])
 
     logger.end()

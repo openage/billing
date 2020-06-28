@@ -1,6 +1,8 @@
 'use strict'
 
-const invoiceService = require('./invoices')
+const invoiceService = require('./invoice')
+const db = require('../models')
+
 const moment = require('moment')
 const ObjectId = require('mongodb').ObjectID
 
@@ -26,8 +28,8 @@ const get = async (id, context) => {
         }
     }, {
         $group: {
-            _id: "$status",
-            amount: { $sum: "$amount" }
+            _id: '$status',
+            amount: { $sum: '$amount' }
         }
     }]))
 
@@ -69,8 +71,8 @@ const get = async (id, context) => {
             }
         }, {
             $group: {
-                _id: "$mode",
-                amount: { $sum: "$amount" }
+                _id: '$mode',
+                amount: { $sum: '$amount' }
             }
         }])
 
@@ -79,12 +81,12 @@ const get = async (id, context) => {
                 switch (item._id) {
                     case 'online':
                         onlineAmount = item.amount
-                        break;
+                        break
                     case 'cash':
                         cashAmount = item.amount
                     case 'card':
                         cardAmount = item.amount
-                        break;
+                        break
                 }
             })
         }
@@ -94,7 +96,6 @@ const get = async (id, context) => {
             cashAmount: cashAmount,
             cardAmount: cardAmount
         })
-
     }
     log.end()
     return summary

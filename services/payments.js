@@ -1,9 +1,12 @@
 'use strict'
 
-const invoiceService = require('./invoices')
+const invoiceService = require('./invoice')
 const organizationService = require('./organizations')
 const gatewayService = require('./gateways')
 const offline = require('@open-age/offline-processor')
+const db = require('../models')
+const crypto = require('../helpers/crypto')
+const { mode } = require('../models/payment')
 
 const onPaymentSuccess = async (payment, context) => {
     let log = context.logger.start('onPaymentSuccess')
@@ -56,7 +59,7 @@ const create = async (model, context) => {
     let gateway
     let invoice = await invoiceService.getById(model.invoice.id, context)
 
-    let organization = await organizationService.get(model.organization, context) || context.organization
+    let organization = model.organization ? await organizationService.get(model.organization, context) : context.organization
 
     if (model.gateway) {
         gateway = await gatewayService.getById(model.gateway.id, context)
@@ -67,6 +70,7 @@ const create = async (model, context) => {
     let payment = await new db.payment({
         date: model.date || new Date(),
         amount: model.amount,
+        webUrl: model.webUrl,
         code: model.code,
         mode: model.mode,
         status: 'started',
@@ -84,7 +88,7 @@ const create = async (model, context) => {
     }
 
     // context.processSync = true
-    // offline.queue('payment', 'started', { id: payment.id }, context)
+    await offline.queue('payment', 'started', { id: payment.id }, context)
 
     log.end()
     return getById(payment.id, context)
@@ -107,7 +111,7 @@ const update = async (model, id, context) => {
                 offline.queue('payment', 'failed', { id: payment.id }, context)
                 break
             case 'refunded':
-                //todo
+                // todo
                 break
             case 'success':
                 await onPaymentSuccess(payment, context)
@@ -118,6 +122,52 @@ const update = async (model, id, context) => {
 
     log.end()
     return payment.save()
+}
+
+const start = async (id, context) => {
+    let log = context.logger.start('services/payments:start')
+
+    let payment = await getById(id, context)
+
+    let gatewayProvider = require(`../providers/${payment.gateway.provider.code}`)
+
+    let data = await gatewayProvider.start(payment, payment.gateway.config, context)
+
+    let hashString = payment.gateway.config.hashSequence.send.inject(data)
+
+    log.info(`hash string : ${hashString}`)
+
+    data.hash = crypto.hashingLogic(hashString)
+
+    log.end()
+
+    return { data: data, view: payment.gateway.provider.code }
+}
+
+const capture = async (id, model, context) => {
+    let log = context.logger.start('services/payments:start')
+
+    if (model.status == 'success') {
+        let payment = await getById(id, context)
+
+        payment.details = model
+        payment.status = 'success'
+
+        await payment.save()
+
+        if (payment.invoice.amount == payment.amount) {
+            payment.invoice.status = 'paid'
+            payment.invoice.save()
+
+            context.processSync = true
+            await offline.queue('invoice', 'paid', { id: payment.invoice.id }, context)
+        }
+
+        context.processSync = true
+        await offline.queue('payment', 'success', { id: payment.id }, context)
+
+        return payment.webUrl || context.tenant.config.webUrl.inject(payment)
+    }
 }
 
 const getById = async (id, context) => {
@@ -139,5 +189,7 @@ const getById = async (id, context) => {
 module.exports = {
     create: create,
     update: update,
-    getById: getById
+    getById: getById,
+    start: start,
+    capture: capture
 }

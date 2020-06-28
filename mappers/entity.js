@@ -1,12 +1,12 @@
 'use strict'
 
-exports.toModel = (entity) => {
+exports.toModel = (entity, context) => {
     let model = {
         id: entity.id || entity._id.toString(),
         entityId: entity.entityId,
         name: entity.name,
         description: entity.description,
-        status: entity.status,
+        status: entity.status
     }
 
     if (entity.pic) {
@@ -33,7 +33,7 @@ exports.toModel = (entity) => {
     if (entity.billing) {
         model.billing = {
             auto: entity.billing.auto,
-            lastDate: entity.billing.lastDate,
+            lastDate: entity.billing.lastDate
         }
         if (entity.billing.periodicity) {
             model.billing.periodicity = {

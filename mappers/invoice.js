@@ -2,22 +2,25 @@
 
 const profileMapper = require('./profile')
 
-exports.toModel = (entity) => {
+exports.toModel = (entity, context) => {
     let model = {
         id: entity.id,
+        entityId: entity.entityId,
         code: entity.code,
+        buyerCode: entity.buyerCode,
         amount: entity.amount,
         dueAmount: entity.dueAmount,
         date: entity.date,
         dueDate: entity.dueDate,
         status: entity.status,
-        tags: entity.tags,
+        tags: entity.tags
     }
 
     if (entity.lineItems && entity.lineItems.length) {
         model.lineItems = entity.lineItems.map(item => {
             let obj = {
-                amount: item.amount
+                amount: item.amount,
+                code: item.code
             }
             if (item.consumption) {
                 obj.consumption = {
@@ -29,17 +32,18 @@ exports.toModel = (entity) => {
             if (item.entity) {
                 obj.entity = item.entity._doc ? {
                     id: item.entity.id,
+                    entityId: item.entity.entityId,
                     name: item.entity.name
                 } : {
                         id: item.entity.toString()
                     }
             }
             if (item.taxes && item.taxes.length) {
-                obj.taxes = item.taxes         //todo
+                obj.taxes = item.taxes // todo
             }
             if (item.discount) {
                 obj.discount = item.discount._doc ? {
-                    id: item.discount.id             //todo
+                    id: item.discount.id // todo
                 } : {
                         id: item.discount.toString()
                     }
@@ -53,7 +57,7 @@ exports.toModel = (entity) => {
             id: entity.buyer.id,
             phone: entity.buyer.phone,
             email: entity.buyer.email,
-            profile: profileMapper.toModel(entity.buyer.profile)
+            profile: profileMapper.toModel(entity.buyer.profile, context)
         } : {
                 id: entity.buyer.toString()
             }
@@ -64,7 +68,7 @@ exports.toModel = (entity) => {
             id: entity.seller.id,
             phone: entity.seller.phone,
             email: entity.seller.email,
-            profile: profileMapper.toModel(entity.seller.profile)
+            profile: profileMapper.toModel(entity.seller.profile, context)
         } : {
                 id: entity.seller.toString()
             }

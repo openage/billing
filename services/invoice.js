@@ -1,43 +1,68 @@
 'use strict'
 
+const db = require('../models')
 const entityService = require('./entities')
 const userService = require('./users')
 const organizationService = require('./organizations')
 const offline = require('@open-age/offline-processor')
+const { default: tenant } = require('../models/tenant')
 
 const create = async (data, context) => {
     let log = context.logger.start('services/invoices:create')
 
-    let buyer = await userService.getOrCreate(data.buyer, context)
+    if (context.organization && context.organization.sources && context.organization.sources.invoice) {
+        var source = require(`../providers/${context.organization.sources.invoice.code}`)
+        data = await source.getInvoice(data, context)
+    }
+
+    let buyer = await userService.get(data.buyer, context)
+
+    if (!buyer) {
+        buyer = await userService.create(data.buyer, context)
+    }
+
+    let seller = context.user
+
+    if (data.seller) {
+        seller = await userService.get(data.seller, context)
+
+        if (!seller) {
+            seller = await userService.create(data.seller, context)
+        }
+    }
 
     let model = {
         order: data.order,
+        entityId: data.entityId,
         date: data.date || new Date(),
         dueDate: data.dueDate,
         status: data.status || 'due',
         lineItems: [],
         tags: data.tags,
         buyer: buyer.id,
-        seller: context.user.id,
+        seller: seller.id,
         service: data.service,
-        tenant: context.tenant
+        tenant: context.tenant,
+        hooks: data.hooks
     }
 
     let organization = await organizationService.get(data.organization || context.organization, context)
 
-    if (!organization) {
-        throw new Error('organization not found')
-    } else {
+    if (organization) {
         model.organization = organization
         model.code = ++organization.lastInvoiceNo
         organization.lastInvoiceNo = model.code
         await organization.save()
+    } else {
+        model.code = ++context.tenant.lastInvoiceNo
+        context.tenant.lastInvoiceNo = model.code
+        await context.tenant.save()
     }
 
-    // model.taxes = []    //todo 
+    // model.taxes = []    //todo
     // model.discount = data.discount  //todo
     let netAmount = 0
-    for (let index = 0; index < data.lineItems.length; index++) {  //todo to calculate taxes and discount 
+    for (let index = 0; index < data.lineItems.length; index++) { // todo to calculate taxes and discount
         let item = data.lineItems[index]
         let rates = []
         let parts = []
@@ -55,7 +80,7 @@ const create = async (data, context) => {
             consumption = {
                 quantity: entity.consumption.quantity,
                 from: entity.consumption.from,
-                till: entity.consumption.till,
+                till: entity.consumption.till
             }
         }
 
@@ -79,6 +104,7 @@ const create = async (data, context) => {
 
         netAmount = netAmount + netItemAmount
         model.lineItems.push({
+            code: item.id,
             amount: netItemAmount,
             entity: entity.id,
             parts: parts,
@@ -103,7 +129,21 @@ const create = async (data, context) => {
 const getById = async (id, context) => {
     context.logger.start('services/invoices:getById')
 
-    return db.invoice.findById(id).populate('seller buyer organization lineItems.entity tenant')
+    if (id.isObjectId()) {
+        return db.invoice.findById(id).populate('seller buyer organization lineItems.entity tenant').populate({
+            path: 'lineItems.entity',
+            populate: {
+                path: 'type'
+            }
+        })
+    } else {
+        return db.invoice.findOne({ entityId: id }).populate('seller buyer organization lineItems.entity tenant').populate({
+            path: 'lineItems.entity',
+            populate: {
+                path: 'type'
+            }
+        })
+    }
 }
 
 const update = async (data, id, context) => {
@@ -125,8 +165,8 @@ const update = async (data, id, context) => {
 
     if (data.lineItems && data.lineItems.length) {
         invoice.lineItems = []
-        for (let index; index < data.lineItems.length; index++) {  //todo to calculate taxes and discount 
-            let item = model.lineItems[index]
+        for (let index = 0; index < data.lineItems.length; index++) { // todo to calculate taxes and discount
+            let item = data.lineItems[index]
 
             let entity = await entityService.get(item.entity, context)
 
@@ -135,6 +175,7 @@ const update = async (data, id, context) => {
             }
 
             invoice.lineItems.push({
+                amount: item.amount,
                 entity: entity.id
             })
         }
@@ -151,9 +192,15 @@ const update = async (data, id, context) => {
     }
 
     await invoice.save()
+    invoice = await getById(invoice.id, context)
+
+    await offline.queue('invoice', invoice.status, invoice, context)
+    // if (context.organization.code == 'gku') {
+    //     edu.updateInvoice(invoice, context)
+    // }
 
     log.end()
-    return getById(invoice.id, context)
+    return invoice
 }
 
 const getInLimit = async (number, query, context) => {

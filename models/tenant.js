@@ -8,6 +8,10 @@ module.exports = {
         index: true,
         unique: true
     },
+    lastInvoiceNo: {
+        type: Number,
+        default: 100000
+    },
     name: String,
     config: Object,
     logo: {
@@ -27,7 +31,10 @@ module.exports = {
     },
 
     services: [{
+        logo: String,
         code: String,
+        name: String,
+        url: String, // api root url
         hooks: { // after action happens
             invoice: {
                 onCreate: String,

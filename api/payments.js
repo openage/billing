@@ -19,6 +19,28 @@ exports.update = async (req) => {
     return mapper.toModel(payment)
 }
 
+exports.start = async (req, res) => {
+    let log = req.context.logger.start('api/payments:update')
+
+    let response = await paymentService.start(req.params.id, req.context)
+
+    log.end()
+
+    res.render(response.view, {
+        data: response.data
+    })
+}
+
+exports.capture = async (req, res) => {
+    let log = req.context.logger.start('api/payments:update')
+
+    let redirectUrl = await paymentService.capture(req.params.id, req.body, req.context)
+
+    log.end()
+
+    res.redirect(redirectUrl)
+}
+
 exports.get = async (req) => {
     let log = req.context.logger.start('api/payments:get')
 

@@ -1,14 +1,13 @@
 'use strict'
 const mongoose = require('mongoose')
 module.exports = {
-    code: {
-        type: String,
-        required: true,
-        index: true,
-        unique: true
-    },
-    name: { type: String },
+    code: { type: String, lowercase: true },
+    name: String,
     shortName: String,
+    logo: {
+        url: String,
+        thumbnail: String
+    },
     config: Object,
     lastInvoiceNo: {
         type: Number,
@@ -35,11 +34,37 @@ module.exports = {
         state: { type: String },
         country: { type: String }
     },
+    services: [{
+        logo: String,
+        code: String,
+        name: String,
+        description: String,
+        url: String, // api root url
+        apps: {
+            web: String,
+            android: String,
+            iOS: String
+        },
+        config: Object,
+        hooks: {
+            invoice: {
+                config: Object,
+                onCreate: {
+                    url: String,
+                    action: String
+                },
+                onPaid: {
+                    url: String,
+                    action: String
+                }
+            }
+        }
+    }],
     currencies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'currency' }],
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
     tenant: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'tenant',
-        //or required: true
+        ref: 'tenant'
+        // or required: true
     }
 }
